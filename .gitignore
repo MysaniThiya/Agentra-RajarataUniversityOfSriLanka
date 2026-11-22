@@ -1,0 +1,13 @@
+
+# Python virtual environment
+project/.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Environment variables and API keys
+.env
+
+# Editor settings
+.vscode/
