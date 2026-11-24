@@ -1,5 +1,7 @@
+# main.py
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, model_validator
 from typing import Optional
 
@@ -11,6 +13,18 @@ app = FastAPI(
     title="PhishGuard AI",
     description="Multi-Agent AI System for Phishing Detection and Cyber Threat Investigation",
     version="1.0.0"
+)
+
+# Allow the React frontend to communicate with FastAPI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
