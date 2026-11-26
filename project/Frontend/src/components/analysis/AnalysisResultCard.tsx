@@ -25,7 +25,7 @@ const statusLabel: Record<Classification, string> = {
   safe: 'Low Risk',
   suspicious: 'Moderate Risk',
   malicious: 'High Risk',
-  unknown: 'Not Available',
+  unknown: 'Inconclusive',
 };
 
 const actionItems: Record<Classification, string[]> = {
@@ -196,7 +196,13 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
               </div>
               <div>
                 <h3 className={`text-lg font-bold ${isMalicious ? 'text-red-800' : config.text}`}>
-                  {isMalicious ? 'This content is likely a phishing attempt!' : result.classification === 'suspicious' ? 'This content needs careful review.' : 'This content appears safe.'}
+                  {isMalicious
+                    ? 'This content is likely a phishing attempt!'
+                    : result.classification === 'suspicious'
+                      ? 'This content needs careful review.'
+                      : result.classification === 'unknown'
+                        ? 'The overall assessment is inconclusive.'
+                        : 'This content appears safe.'}
                 </h3>
                 <p className="mt-1 text-sm leading-relaxed text-navy-800">
                   {isMalicious
@@ -234,14 +240,16 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
           </div>
         </ReportPanel>
 
-        <ReportPanel title="Detected Indicators" icon={FileText} tone="purple">
+        <ReportPanel title="Agent Evidence" icon={FileText} tone="purple">
           <div className="divide-y divide-indigo-100">
             {indicators.slice(0, 4).map((indicator, index) => (
               <div key={`${indicator.title}-${index}`} className="flex items-center gap-3 px-4 py-3">
                 <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${indicator.severity === 'malicious' ? 'bg-red-500' : 'bg-amber-500'} text-white`}>
                   <AlertTriangle className="h-3.5 w-3.5" />
                 </span>
-                <p className="text-sm font-medium text-navy-800">{indicator.title}</p>
+                <p className="text-sm font-medium text-navy-800">
+                  {indicator.detail}
+                </p>
               </div>
             ))}
           </div>
