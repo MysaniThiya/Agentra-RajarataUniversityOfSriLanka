@@ -3,6 +3,8 @@ from langgraph.graph import StateGraph, START, END
 
 from orchestration.state import PhishGuardState
 from agents.threat_intelligence_agent import analyze_threat_intelligence
+from schemas.agent_result import AgentResult
+from agents.risk_assessment.risk_assessment_agent import assess_risk
 
 
 # 1. Threat Intelligence Agent
@@ -73,13 +75,30 @@ def url_agent_node(state: PhishGuardState):
     }
 
 
-# 4. Temporary Risk Assessment Agent
+# 4. Risk Assessment Agent
 def risk_assessment_node(state: PhishGuardState):
+
+    # Collect results from the three analysis agents
+    raw_results = [
+        state.get("email_result", {}),
+        state.get("url_result", {}),
+        state.get("threat_intelligence_result", {})
+    ]
+
+    # Convert valid agent results into AgentResult objects
+    agent_results = []
+
+    for result in raw_results:
+        if result:
+            agent_results.append(
+                AgentResult.model_validate(result)
+            )
+
+    # Perform combined risk assessment
+    risk_result = assess_risk(agent_results)
+
     return {
-        "risk_assessment_result": {
-            "status": "unavailable",
-            "explanation": "Risk Assessment Agent integration is pending."
-        }
+        "risk_assessment_result": risk_result.model_dump()
     }
 
 

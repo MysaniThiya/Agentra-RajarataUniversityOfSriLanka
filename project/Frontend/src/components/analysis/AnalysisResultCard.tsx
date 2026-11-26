@@ -254,14 +254,20 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-bold text-emerald-800">Recommended Actions</h3>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {actionItems[result.classification].map((action) => (
-                <div key={action} className="flex items-start gap-2 text-sm font-medium text-navy-800">
-                  <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
-                    <Check className="h-3 w-3" />
-                  </span>
-                  {action}
-                </div>
-              ))}
+              {result.recommendedAction
+                .split('\n')
+                .filter((action) => action.trim().length > 0)
+                .map((action, index) => (
+                  <div
+                    key={`${action}-${index}`}
+                    className="flex items-start gap-2 text-sm font-medium text-navy-800"
+                  >
+                    <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">
+                      <Check className="h-3 w-3" />
+                    </span>
+                    {action}
+                  </div>
+                ))}
             </div>
           </div>
           <Laptop className="hidden h-20 w-20 shrink-0 self-end text-blue-700/30 sm:block" />
