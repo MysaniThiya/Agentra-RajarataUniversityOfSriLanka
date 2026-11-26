@@ -25,6 +25,7 @@ const statusLabel: Record<Classification, string> = {
   safe: 'Low Risk',
   suspicious: 'Moderate Risk',
   malicious: 'High Risk',
+  unknown: 'Not Available',
 };
 
 const actionItems: Record<Classification, string[]> = {
@@ -45,24 +46,41 @@ const actionItems: Record<Classification, string[]> = {
     'Report the suspicious message to your security team.',
     'Verify communications through official channels.',
   ],
+  unknown: [
+    'The analysis is incomplete.',
+    'Do not click unknown or suspicious links.',
+    'Wait for the remaining security agents to complete their analysis.',
+    'Verify the URL through its official website.',
+  ],
 };
 
-function RiskGauge({ score, classification }: { score: number; classification: Classification }) {
-  const color = classification === 'safe' ? '#16a34a' : classification === 'suspicious' ? '#f59e0b' : '#dc2626';
+function RiskGauge({
+  score,
+  classification,
+}: {
+  score: number | null;
+  classification: Classification;
+}) {
+  const color =
+    classification === 'safe'
+      ? '#16a34a'
+      : classification === 'suspicious'
+        ? '#f59e0b'
+        : classification === 'malicious'
+          ? '#dc2626'
+          : '#94a3b8';
+
   const radius = 72;
   const circumference = Math.PI * radius;
-  const progress = circumference - (Math.min(score, 100) / 100) * circumference;
+
+  const progress =
+    score === null
+      ? 0
+      : circumference - (Math.min(score, 100) / 100) * circumference;
 
   return (
     <div className="relative h-[148px] w-[260px] max-w-full">
       <svg viewBox="0 0 180 100" className="h-full w-full overflow-visible">
-        <defs>
-          <linearGradient id="risk-gradient" x1="0%" x2="100%">
-            <stop offset="0%" stopColor="#f97316" />
-            <stop offset="55%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#be123c" />
-          </linearGradient>
-        </defs>
         <path
           d="M 18 90 A 72 72 0 0 1 162 90"
           fill="none"
@@ -70,26 +88,43 @@ function RiskGauge({ score, classification }: { score: number; classification: C
           strokeWidth="13"
           strokeLinecap="round"
         />
-        <path
-          d="M 18 90 A 72 72 0 0 1 162 90"
-          fill="none"
-          stroke={classification === 'safe' ? color : 'url(#risk-gradient)'}
-          strokeWidth="13"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={progress}
-          className="transition-all duration-1000"
-        />
+
+        {score !== null && (
+          <path
+            d="M 18 90 A 72 72 0 0 1 162 90"
+            fill="none"
+            stroke={color}
+            strokeWidth="13"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={progress}
+            className="transition-all duration-1000"
+          />
+        )}
       </svg>
+
       <div className="absolute inset-x-0 bottom-1 flex items-baseline justify-center gap-1">
-        <span className={`text-5xl font-bold tracking-tight ${classificationConfig[classification].text}`}>
-          {score}
+        <span className="text-4xl font-bold tracking-tight text-slate-700">
+          {score === null ? 'N/A' : score}
         </span>
-        <span className="text-2xl font-bold text-navy-800">/100</span>
+
+        {score !== null && (
+          <span className="text-2xl font-bold text-navy-800">/100</span>
+        )}
       </div>
+
       <div className="absolute bottom-[-22px] inset-x-0 flex justify-center">
-        <span className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1 text-sm font-bold ${classificationConfig[classification].bg} ${classificationConfig[classification].text} ${classificationConfig[classification].border}`}>
-          {classification === 'safe' ? <ShieldCheck className="h-4 w-4" /> : <ShieldAlert className="h-4 w-4" />}
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1 text-sm font-bold ${classificationConfig[classification].bg} ${classificationConfig[classification].text} ${classificationConfig[classification].border}`}
+        >
+          {classification === 'safe' ? (
+            <ShieldCheck className="h-4 w-4" />
+          ) : classification === 'unknown' ? (
+            <ShieldQuestion className="h-4 w-4" />
+          ) : (
+            <ShieldAlert className="h-4 w-4" />
+          )}
+
           {statusLabel[classification]}
         </span>
       </div>
@@ -180,7 +215,7 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
             {findings.slice(0, 4).map((finding, index) => {
               const label = 'agent' in finding ? finding.agent : finding.title;
               const detail = 'agent' in finding ? finding.finding : finding.detail;
-              const classification = 'agent' in finding ? (index === 0 ? 'suspicious' : 'malicious') : finding.severity;
+              const classification ='agent' in finding? finding.classification: finding.severity;
               return (
                 <div key={`${label}-${index}`} className="flex items-center gap-3 px-4 py-3">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-700" />
@@ -189,7 +224,9 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
                     <p className="truncate text-xs text-navy-500">{detail}</p>
                   </div>
                   <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${classificationConfig[classification].bg} ${classificationConfig[classification].text}`}>
-                    {classificationConfig[classification].label}
+                    {'agent' in finding && finding.status === 'unavailable'
+                      ? 'Pending'
+                      : classificationConfig[classification].label}
                   </span>
                 </div>
               );

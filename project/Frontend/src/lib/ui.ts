@@ -31,6 +31,15 @@ export const classificationConfig: Record<
     bar: 'bg-red-500',
     dot: 'bg-red-500',
   },
+    unknown: {
+    label: 'Unknown',
+    text: 'text-slate-700',
+    bg: 'bg-slate-50',
+    border: 'border-slate-200',
+    ring: 'ring-slate-300',
+    bar: 'bg-slate-400',
+    dot: 'bg-slate-400',
+  },
 };
 
 export function scoreColor(score: number): string {

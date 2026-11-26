@@ -15,6 +15,8 @@ export interface Evidence {
 export interface AgentFinding {
   agent: string;
   finding: string;
+  classification: Classification;
+  status: 'completed' | 'unavailable' | 'error';
   confidence?: number;
 }
 

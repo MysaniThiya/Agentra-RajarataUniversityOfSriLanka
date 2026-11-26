@@ -22,6 +22,8 @@ interface BackendResponse {
     risk_assessment: {
       status: string;
       explanation: string;
+      risk_score?: number | null;
+      classification?: 'safe' | 'suspicious' | 'malicious' | 'unknown';
     } | null;
   };
 }
@@ -55,30 +57,50 @@ async function analyzeWithBackend(
   }
 
   const data: BackendResponse = await response.json();
+
   const agents = [
     data.results.email,
     data.results.url,
     data.results.threat_intelligence,
-  ].filter((agent): agent is BackendAgentResult => agent !== null);
+  ].filter(
+    (agent): agent is BackendAgentResult =>
+      agent !== null && agent !== undefined
+  );
 
   const maliciousAgent = agents.find(
-    (agent) => agent.classification === 'malicious'
+    (agent) =>
+      agent.status === 'completed' &&
+      agent.classification === 'malicious'
   );
 
   const suspiciousAgent = agents.find(
-    (agent) => agent.classification === 'suspicious'
+    (agent) =>
+      agent.status === 'completed' &&
+      agent.classification === 'suspicious'
   );
 
+  const completedAgents = agents.filter(
+    (agent) => agent.status === 'completed'
+  );
+
+  const riskAssessment = data.results.risk_assessment;
+
   const classification =
+    riskAssessment?.classification ??
     maliciousAgent?.classification ??
     suspiciousAgent?.classification ??
+    completedAgents.find(
+      (agent) => agent.classification === 'safe'
+    )?.classification ??
     'unknown';
 
   const riskScore =
-    data.results.risk_assessment &&
-    'risk_score' in data.results.risk_assessment
-      ? (data.results.risk_assessment as { risk_score?: number | null }).risk_score ?? null
-      : null;
+    riskAssessment?.risk_score ??
+    agents.find(
+      (agent) => agent.status === 'completed' &&
+        agent.risk_score !== null
+    )?.risk_score ??
+    null;
 
   const evidence = agents.flatMap((agent) =>
     agent.evidence.map((detail) => ({
@@ -91,13 +113,15 @@ async function analyzeWithBackend(
   const agentFindings = agents.map((agent) => ({
     agent: agent.agent,
     finding: agent.explanation,
+    classification: agent.classification,
+    status: agent.status,
   }));
 
   const explanation =
-    maliciousAgent?.explanation ??
-    suspiciousAgent?.explanation ??
-    data.results.risk_assessment?.explanation ??
-    agents.map((agent) => agent.explanation).join(' ') ??
+    riskAssessment?.explanation ||
+    maliciousAgent?.explanation ||
+    suspiciousAgent?.explanation ||
+    completedAgents.map((agent) => agent.explanation).join(' ') ||
     'The analysis did not produce a conclusive result.';
 
   const recommendedAction =
@@ -105,7 +129,9 @@ async function analyzeWithBackend(
       ? 'Do not interact with this content. Avoid clicking links, opening attachments, or sharing information.'
       : classification === 'suspicious'
         ? 'Proceed with caution. Verify the sender or URL through an official channel before interacting.'
-        : 'The result is inconclusive. Do not assume this content is safe; verify it independently.';
+        : classification === 'safe'
+          ? 'No known threat was detected. Continue following normal security practices.'
+          : 'The result is inconclusive. Do not assume this content is safe; verify it independently.';
 
   return {
     id: `scan-${Date.now()}`,
@@ -121,4 +147,10 @@ async function analyzeWithBackend(
   };
 }
 
+export async function fetchHistory(): Promise<AnalysisResult[]> {
+  // History API is not implemented in the backend yet.
+  // Return an empty list instead of sample data.
+
+  return [];
+}
 export type { ScanType };
