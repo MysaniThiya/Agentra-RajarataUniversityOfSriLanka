@@ -102,23 +102,28 @@ async function analyzeWithBackend(
     'unknown';
 
   // Get risk score
-  const riskScore =
-    riskAssessment?.risk_score ??
-    agents.find(
+  const riskScore = riskAssessment
+  ? riskAssessment.risk_score
+  : agents.find(
       (agent) =>
         agent.status === 'completed' &&
         agent.risk_score !== null
-    )?.risk_score ??
-    null;
+    )?.risk_score ?? null;
 
   // Collect evidence from individual agents
-  const evidence = agents.flatMap((agent) =>
-    agent.evidence.map((detail) => ({
+  // Collect evidence and indicators from individual agents
+  const evidence = agents.flatMap((agent) => [
+    ...agent.evidence.map((detail) => ({
       title: `${agent.agent} evidence`,
       detail,
       severity: agent.classification,
-    }))
-  );
+    })),
+    ...agent.indicators.map((indicator) => ({
+      title: `${agent.agent} indicator`,
+      detail: indicator,
+      severity: agent.classification,
+    })),
+  ]);
 
   // Collect individual agent findings
   const agentFindings = agents.map((agent) => ({

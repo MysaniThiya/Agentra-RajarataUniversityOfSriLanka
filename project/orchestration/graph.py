@@ -2,9 +2,11 @@
 from langgraph.graph import StateGraph, START, END
 
 from orchestration.state import PhishGuardState
+from agents.email_analysis_agent import analyze_email
 from agents.threat_intelligence_agent import analyze_threat_intelligence
 from schemas.agent_result import AgentResult
 from agents.risk_assessment.risk_assessment_agent import assess_risk
+from agents.url_analysis_agent import analyze_url
 
 
 # 1. Threat Intelligence Agent
@@ -45,34 +47,85 @@ def threat_intelligence_node(state: PhishGuardState):
         }
 
 
-# 2. Temporary Email Agent
+# 2. final Email Agent
+
 def email_agent_node(state: PhishGuardState):
-    return {
-        "email_result": {
-            "agent": "Email Agent",
-            "status": "unavailable",
-            "classification": "unknown",
-            "risk_score": None,
-            "indicators": [],
-            "explanation": "Email Agent integration is pending.",
-            "evidence": []
+    email_content = state.get("email_content", "").strip()
+
+    if not email_content:
+        return {
+            "email_result": {
+                "agent": "Email Analysis Agent",
+                "status": "unavailable",
+                "classification": "unknown",
+                "risk_score": None,
+                "indicators": [],
+                "explanation": "No email content was provided.",
+                "evidence": []
+            }
         }
-    }
+
+    try:
+        result = analyze_email(email_content)
+
+        return {
+            "email_result": result.model_dump()
+        }
+
+    except Exception as error:
+        return {
+            "email_result": {
+                "agent": "Email Analysis Agent",
+                "status": "error",
+                "classification": "unknown",
+                "risk_score": None,
+                "indicators": [],
+                "explanation": "Email analysis failed.",
+                "evidence": []
+            },
+            "errors": [str(error)]
+        }
 
 
-# 3. Temporary URL Agent
+
+
+# 3. URL Analysis Agent
 def url_agent_node(state: PhishGuardState):
-    return {
-        "url_result": {
-            "agent": "URL Agent",
-            "status": "unavailable",
-            "classification": "unknown",
-            "risk_score": None,
-            "indicators": [],
-            "explanation": "URL Agent integration is pending.",
-            "evidence": []
+    url = state.get("submitted_url", "")
+
+    if not url:
+        return {
+            "url_result": {
+                "agent": "URL Analysis Agent",
+                "status": "unavailable",
+                "classification": "unknown",
+                "risk_score": None,
+                "indicators": [],
+                "explanation": "No URL was provided.",
+                "evidence": []
+            }
         }
-    }
+
+    try:
+        result = analyze_url(url)
+
+        return {
+            "url_result": result.model_dump()
+        }
+
+    except Exception as error:
+        return {
+            "url_result": {
+                "agent": "URL Analysis Agent",
+                "status": "error",
+                "classification": "unknown",
+                "risk_score": None,
+                "indicators": [],
+                "explanation": "URL analysis failed.",
+                "evidence": []
+            },
+            "errors": [str(error)]
+        }
 
 
 # 4. Risk Assessment Agent

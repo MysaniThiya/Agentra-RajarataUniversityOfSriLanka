@@ -1,4 +1,4 @@
-import { ShieldCheck, LayoutDashboard, History, Info, X } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, X } from 'lucide-react';
 import type { Page } from '@/types';
 
 interface SidebarProps {
@@ -10,9 +10,6 @@ interface SidebarProps {
 
 const navItems: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'history', label: 'Scan History', icon: History },
-  { id: 'about', label: 'About', icon: Info },
-
 ];
 
 export function Sidebar({ current, onNavigate, mobileOpen, onCloseMobile }: SidebarProps) {

@@ -173,7 +173,13 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
 
         <div className="relative mt-6 grid gap-5 lg:grid-cols-[120px_1fr] lg:items-center">
           <div className={`mx-auto grid h-28 w-28 place-items-center rounded-full border-[10px] ${isMalicious ? 'border-red-100 bg-red-50' : `${config.border} ${config.bg}`}`}>
-            {isMalicious ? <ShieldAlert className="h-14 w-14 text-red-500" /> : <ShieldCheck className={`h-14 w-14 ${config.text}`} />}
+            {result.classification === 'unknown' ? (
+              <ShieldQuestion className="h-14 w-14 text-slate-500" />
+            ) : isMalicious || result.classification === 'suspicious' ? (
+              <ShieldAlert className={`h-14 w-14 ${config.text}`} />
+            ) : (
+              <ShieldCheck className={`h-14 w-14 ${config.text}`} />
+            )}
           </div>
           <div className="text-center lg:text-left">
             <h2 className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
@@ -232,26 +238,59 @@ export function AnalysisResultCard({ result, onBack }: AnalysisResultCardProps) 
                   <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${classificationConfig[classification].bg} ${classificationConfig[classification].text}`}>
                     {'agent' in finding && finding.status === 'unavailable'
                       ? 'Pending'
-                      : classificationConfig[classification].label}
+                      : 'agent' in finding && finding.status === 'error'
+                        ? 'Error'
+                        : classificationConfig[classification].label}
                   </span>
                 </div>
-              );
+              );  
             })}
           </div>
         </ReportPanel>
 
         <ReportPanel title="Agent Evidence" icon={FileText} tone="purple">
           <div className="divide-y divide-indigo-100">
-            {indicators.slice(0, 4).map((indicator, index) => (
-              <div key={`${indicator.title}-${index}`} className="flex items-center gap-3 px-4 py-3">
-                <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${indicator.severity === 'malicious' ? 'bg-red-500' : 'bg-amber-500'} text-white`}>
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                </span>
-                <p className="text-sm font-medium text-navy-800">
-                  {indicator.detail}
-                </p>
-              </div>
-            ))}
+            {indicators.slice(0, 4).map((indicator, index) => {
+              const severity = indicator.severity;
+
+              const iconConfig = {
+                safe: {
+                  background: 'bg-emerald-500',
+                  icon: <ShieldCheck className="h-3.5 w-3.5" />,
+                },
+                suspicious: {
+                  background: 'bg-amber-500',
+                  icon: <AlertTriangle className="h-3.5 w-3.5" />,
+                },
+                malicious: {
+                  background: 'bg-red-500',
+                  icon: <ShieldAlert className="h-3.5 w-3.5" />,
+                },
+                unknown: {
+                  background: 'bg-slate-400',
+                  icon: <Info className="h-3.5 w-3.5" />,
+                },
+              };
+
+              const config = iconConfig[severity];
+
+              return (
+                <div
+                  key={`${indicator.title}-${index}`}
+                  className="flex items-center gap-3 px-4 py-3"
+                >
+                  <span
+                    className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${config.background} text-white`}
+                  >
+                    {config.icon}
+                  </span>
+
+                  <p className="text-sm font-medium text-navy-800">
+                    {indicator.detail}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </ReportPanel>
       </div>
