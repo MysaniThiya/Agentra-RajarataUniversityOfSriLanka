@@ -86,10 +86,12 @@ Project Structure
 Agentra-RajarataUniversityOfSriLanka/
 │
 ├── project/
+│   │
 │   ├── agents/
 │   │   ├── email_analysis_agent.py
 │   │   ├── url_analysis_agent.py
 │   │   ├── threat_intelligence_agent.py
+│   │   │
 │   │   └── risk_assessment/
 │   │       └── risk_assessment_agent.py
 │   │
@@ -102,6 +104,7 @@ Agentra-RajarataUniversityOfSriLanka/
 │   │   └── risk_assessment_result.py
 │   │
 │   ├── models/
+│   │   └── (Trained ML model files)
 │   │
 │   ├── Frontend/
 │   │   ├── src/
