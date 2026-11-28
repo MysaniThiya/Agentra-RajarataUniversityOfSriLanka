@@ -106,12 +106,13 @@ Agentra-RajarataUniversityOfSriLanka/
 │   ├── Frontend/
 │   │   ├── src/
 │   │   ├── public/
-│   │   ├── package.json
-│   │   └── vite.config.ts
+│   │   └── package.json
 │   │
 │   ├── main.py
-│   ├── requirements.txt
-│   └── .env.example
+│   └── requirements.txt
+│
+├── docs/
+│   └── Proposal.docx
 │
 └── README.md
 
